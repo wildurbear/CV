@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Evan — Systems Administrator</title>
+<meta name="description" content="Systems Administrator — cloud, identity, networks, and the things that build themselves at 3am." />
+
+<style>
+/* =========================================================================
+   THEME TOKENS  (light = default; dark overrides below)
+   ========================================================================= */
+:root{
+  --bg:#eef1f4;
+  --panel:#ffffff;
+  --panel-2:#f7f9fb;
+  --raised:#eef2f6;
+  --border:#d6dee6;
+  --border-soft:#e4e9ee;
+  --text:#101820;
+  --muted:#4f5b67;
+  --faint:#8593a0;
+  --accent:#0e7d8b;
+  --accent-dim:#0e7d8b;
+  --online:#1f883d;
+  --warn:#9a6700;
+  --shadow:rgba(20,40,60,.10);
+  --grid:rgba(14,125,139,.06);
+  --glow:rgba(14,125,139,.08);
+  --mono: ui-monospace,"Cascadia Code","SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --maxw:1060px;
+}
+:root[data-theme="dark"]{
+  --bg:#0a0e13;
+  --panel:#0f151c;
+  --panel-2:#131b24;
+  --raised:#172230;
+  --border:#1f2b38;
+  --border-soft:#16202b;
+  --text:#e6edf3;
+  --muted:#8a98a6;
+  --faint:#5d6b78;
+  --accent:#56cfe1;
+  --accent-dim:#2b818d;
+  --online:#3fb950;
+  --warn:#d2a022;
+  --shadow:rgba(0,0,0,.40);
+  --grid:rgba(86,207,225,.05);
+  --glow:rgba(86,207,225,.10);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:var(--sans); line-height:1.6;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  transition:background .25s ease, color .25s ease;
+}
+
+/* faint engineering grid + soft glow */
+body::before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%, #000 35%, transparent 80%);
+          mask-image:radial-gradient(ellipse 90% 60% at 50% 0%, #000 35%, transparent 80%);
+}
+body::after{
+  content:""; position:fixed; top:-200px; left:50%; transform:translateX(-50%);
+  width:900px; height:480px; z-index:0; pointer-events:none;
+  background:radial-gradient(closest-side, var(--glow), transparent 70%);
+}
+
+/* =========================================================================
+   TOP NAV  (sticky tabs — the primary, zero-scroll navigation)
+   ========================================================================= */
+.nav{
+  position:sticky; top:0; z-index:50;
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  padding:.55rem clamp(1rem,4vw,2rem);
+  background:color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border-soft);
+}
+.brand{
+  display:inline-flex; align-items:center; gap:.5rem; white-space:nowrap;
+  font-family:var(--mono); font-size:.95rem; font-weight:600;
+  color:var(--text); text-decoration:none;
+}
+.brand:hover{color:var(--accent)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.dot.online{background:var(--online); box-shadow:0 0 0 0 rgba(63,185,80,.55); animation:pulse 2.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,185,80,.5)}70%{box-shadow:0 0 0 7px rgba(63,185,80,0)}100%{box-shadow:0 0 0 0 rgba(63,185,80,0)}}
+
+.tabs{display:flex; gap:.2rem; overflow-x:auto; scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+/* NOTE: to split these into real separate pages later, change each href
+   from "#impact" to "impact.html", etc. The scroll-spy will simply no-op. */
+.tabs a{
+  font-family:var(--mono); font-size:.96rem; color:var(--muted);
+  text-decoration:none; padding:.45rem .85rem; border-radius:7px;
+  white-space:nowrap; position:relative; transition:.15s;
+}
+.tabs a:hover{color:var(--text); background:var(--raised)}
+.tabs a.active{color:var(--accent)}
+.tabs a.active::after{content:""; position:absolute; left:.85rem; right:.85rem; bottom:.02rem; height:2px; background:var(--accent); border-radius:2px}
+
+.nav-right{display:flex; align-items:center; gap:.6rem}
+.theme-btn{
+  background:transparent; border:1px solid var(--border); border-radius:6px;
+  color:var(--muted); cursor:pointer; width:30px; height:25px;
+  display:inline-flex; align-items:center; justify-content:center; padding:0; transition:.15s;
+}
+.theme-btn:hover{border-color:var(--accent-dim); color:var(--accent)}
+.theme-btn svg{width:14px; height:14px; fill:currentColor}
+
+/* =========================================================================
+   LAYOUT
+   ========================================================================= */
+.wrap{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding:0 clamp(1rem,4vw,2rem)}
+section{padding:2.6rem 0; scroll-margin-top:70px}
+.section-head{display:flex; align-items:baseline; gap:.75rem; margin-bottom:1.3rem}
+.section-head h2{font-family:var(--mono); font-size:1.02rem; font-weight:600; letter-spacing:.2px}
+.section-head h2 .pre{color:var(--accent); margin-right:.15rem}
+.section-head .count{font-family:var(--mono); font-size:.74rem; color:var(--faint); border:1px solid var(--border); border-radius:5px; padding:.05rem .45rem}
+.section-head .rule{flex:1; height:1px; background:linear-gradient(90deg,var(--border),transparent)}
+
+/* =========================================================================
+   HERO
+   ========================================================================= */
+.hero{padding-top:2.4rem; scroll-margin-top:70px}
+.hero-panel{background:linear-gradient(180deg,var(--panel),var(--panel-2)); border:1px solid var(--border); border-radius:14px; box-shadow:0 10px 30px var(--shadow)}
+.hero-body{display:grid; grid-template-columns:1fr auto; gap:clamp(1.2rem,4vw,2.2rem); align-items:center; padding:clamp(1.4rem,4vw,2.4rem)}
+.hero-body.no-photo{grid-template-columns:1fr}
+.avatar{order:2; position:relative; width:180px; height:180px; flex:none; border-radius:14px; overflow:hidden; border:1px solid var(--border); background:var(--raised); box-shadow:0 0 0 4px var(--glow)}
+.avatar img{width:100%; height:100%; object-fit:cover; display:block}
+.avatar .fallback{display:none; width:100%; height:100%; align-items:center; justify-content:center; font-family:var(--mono); font-size:2.7rem; font-weight:700; color:var(--accent); background:radial-gradient(circle at 30% 20%, var(--glow), transparent 60%), var(--raised)}
+.pill{display:inline-flex; align-items:center; gap:.4rem; font-family:var(--mono); font-size:.73rem; color:var(--online); border:1px solid color-mix(in srgb,var(--online) 35%,transparent); background:color-mix(in srgb,var(--online) 8%,transparent); border-radius:20px; padding:.16rem .6rem; margin-bottom:.7rem}
+.identity .eyebrow{font-family:var(--mono); font-size:.95rem; color:var(--accent); letter-spacing:.5px; margin-bottom:.35rem}
+.identity h1{font-size:clamp(2.1rem,6vw,3rem); line-height:1.05; letter-spacing:-.5px; font-weight:700; margin-bottom:.35rem}
+.identity .title{font-size:1.06rem; font-weight:600; margin-bottom:.5rem}
+.identity .title b{color:var(--accent); font-weight:600}
+.identity .tagline{color:var(--muted); max-width:54ch; margin-bottom:1rem}
+.meta-row{display:flex; flex-wrap:wrap; align-items:center; gap:.6rem 1.1rem; margin-bottom:1.1rem}
+.meta-row .item{font-family:var(--mono); font-size:.8rem; color:var(--muted); display:flex; align-items:center; gap:.4rem}
+.meta-row .item svg{width:14px; height:14px; stroke:var(--faint); fill:none; stroke-width:1.6}
+.links{display:flex; flex-wrap:wrap; gap:.6rem}
+.links a,.links button{display:inline-flex; align-items:center; gap:.45rem; font-family:var(--mono); font-size:.82rem; text-decoration:none; color:var(--text); background:var(--raised); border:1px solid var(--border); border-radius:8px; padding:.45rem .8rem; transition:.18s ease; cursor:pointer}
+.links a:hover,.links button:hover{border-color:var(--accent-dim); color:var(--accent); transform:translateY(-2px)}
+.links svg{width:15px; height:15px; fill:currentColor}
+
+/* =========================================================================
+   METRIC TILES
+   ========================================================================= */
+.tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(165px,1fr)); gap:.85rem}
+.tile{background:var(--panel); border:1px solid var(--border); border-radius:11px; padding:1.05rem 1.1rem; position:relative; overflow:hidden; box-shadow:0 3px 12px var(--shadow)}
+.tile::before{content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:linear-gradient(var(--accent),transparent); opacity:.7}
+.tile-val{font-family:var(--mono); font-size:1.85rem; font-weight:700; letter-spacing:-1px; line-height:1}
+.tile-val span{color:var(--accent)}
+.tile-label{margin-top:.45rem; font-size:.82rem; color:var(--muted)}
+.tile-note{margin-top:.15rem; font-family:var(--mono); font-size:.7rem; color:var(--faint)}
+
+/* =========================================================================
+   PROJECTS
+   ========================================================================= */
+.projects{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem}
+.card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:1.2rem; display:flex; flex-direction:column; gap:.7rem; transition:.2s ease; box-shadow:0 3px 12px var(--shadow)}
+.card:hover{transform:translateY(-3px); border-color:var(--accent-dim); box-shadow:0 14px 34px var(--shadow)}
+.card-top{display:flex; align-items:center; justify-content:space-between; gap:.6rem}
+.card-top h3{font-size:1.05rem; font-weight:650}
+.status{font-family:var(--mono); font-size:.68rem; color:var(--muted); display:inline-flex; align-items:center; gap:.4rem; white-space:nowrap; border:1px solid var(--border); border-radius:20px; padding:.12rem .55rem}
+.status .dot{width:7px; height:7px}
+.status.live .dot{background:var(--online)} .status.live{color:var(--online)}
+.status.wip .dot{background:var(--warn)}   .status.wip{color:var(--warn)}
+.card p{color:var(--muted); font-size:.92rem; flex:1}
+.tags{display:flex; flex-wrap:wrap; gap:.4rem}
+.tags span{font-family:var(--mono); font-size:.7rem; color:var(--accent); background:color-mix(in srgb,var(--accent) 8%,transparent); border:1px solid color-mix(in srgb,var(--accent) 22%,transparent); border-radius:5px; padding:.12rem .45rem}
+.card-links{display:flex; gap:1rem; margin-top:.2rem}
+.card-links a{font-family:var(--mono); font-size:.78rem; color:var(--text); text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; transition:.15s}
+.card-links a:hover{color:var(--accent)}
+.card.add{border-style:dashed; align-items:center; justify-content:center; text-align:center; color:var(--faint); font-family:var(--mono); font-size:.84rem; min-height:160px; box-shadow:none}
+.card.add:hover{transform:none; border-color:var(--accent-dim); color:var(--muted); box-shadow:none}
+.card.add .plus{font-size:1.5rem; color:var(--accent); margin-bottom:.3rem}
+
+/* =========================================================================
+   EXPERIENCE TIMELINE
+   ========================================================================= */
+.timeline{position:relative; margin-left:.4rem}
+.timeline::before{content:""; position:absolute; left:5px; top:6px; bottom:6px; width:1px; background:var(--border)}
+.entry{position:relative; padding:0 0 1.6rem 1.7rem}
+.entry:last-child{padding-bottom:0}
+.entry::before{content:""; position:absolute; left:0; top:7px; width:11px; height:11px; border-radius:50%; background:var(--bg); border:2px solid var(--accent-dim)}
+.entry.current::before{border-color:var(--online); box-shadow:0 0 0 3px color-mix(in srgb,var(--online) 18%,transparent)}
+.entry .role{font-size:1.04rem; font-weight:650}
+.entry .org{color:var(--accent); font-size:.92rem}
+.entry .period{font-family:var(--mono); font-size:.74rem; color:var(--faint); margin:.1rem 0 .5rem}
+.entry ul{list-style:none; display:flex; flex-direction:column; gap:.3rem}
+.entry li{position:relative; padding-left:1.1rem; color:var(--muted); font-size:.92rem}
+.entry li::before{content:"▹"; position:absolute; left:0; color:var(--accent-dim)}
+
+/* =========================================================================
+   STACK
+   ========================================================================= */
+.stack{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:.85rem}
+.group{background:var(--panel); border:1px solid var(--border); border-radius:11px; padding:1.05rem 1.1rem; box-shadow:0 3px 12px var(--shadow)}
+.group h4{font-family:var(--mono); font-size:.8rem; color:var(--accent); font-weight:600; margin-bottom:.75rem; display:flex; align-items:center; gap:.45rem}
+.group h4::before{content:"#"; color:var(--faint)}
+.chips{display:flex; flex-wrap:wrap; gap:.4rem}
+.chips span{font-size:.8rem; color:var(--text); background:var(--raised); border:1px solid var(--border); border-radius:6px; padding:.22rem .55rem; transition:.15s}
+.chips span:hover{border-color:var(--accent-dim); color:var(--accent)}
+
+/* =========================================================================
+   FOOTER
+   ========================================================================= */
+footer{border-top:1px solid var(--border-soft); margin-top:1rem; padding:1.6rem 0 2.6rem; scroll-margin-top:70px}
+footer .prompt{font-family:var(--mono); font-size:.8rem; color:var(--muted)}
+footer .prompt .accent{color:var(--accent)}
+footer .copy{font-family:var(--mono); font-size:.72rem; color:var(--faint); margin-top:.4rem}
+
+/* =========================================================================
+   REVEAL
+   ========================================================================= */
+.reveal{opacity:0; transform:translateY(14px); transition:opacity .55s ease, transform .55s ease}
+.reveal.in{opacity:1; transform:none}
+@media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important} .reveal{opacity:1; transform:none}}
+
+/* =========================================================================
+   RESPONSIVE
+   ========================================================================= */
+@media (max-width:640px){
+  .hero-body{grid-template-columns:1fr}
+  .avatar{order:0; width:128px; height:128px}
+  .brand .host{display:none}
+}
+
+/* =========================================================================
+   PRINT / PDF
+   ========================================================================= */
+@media print{
+  :root, :root[data-theme="light"], :root[data-theme="dark"]{
+    --bg:#fff; --panel:#fff; --panel-2:#fff; --raised:#f3f5f7;
+    --border:#c7d0d8; --border-soft:#e2e7ec;
+    --text:#10171e; --muted:#39434d; --faint:#6b7682;
+    --accent:#0b6f7c; --accent-dim:#0b6f7c; --grid:transparent; --glow:transparent; --shadow:transparent;
+  }
+  body{background:#fff}
+  body::before, body::after{display:none}
+  .nav, .card.add, #print-link, .theme-btn{display:none !important}
+  .reveal{opacity:1 !important; transform:none !important}
+  .card:hover{transform:none}
+  .hero-panel,.tile,.card,.group{box-shadow:none}
+  .hero{padding-top:.2rem}
+  section{padding:.7rem 0}
+  .card,.entry,.group,.tile,.hero-panel{break-inside:avoid; page-break-inside:avoid}
+  .projects,.stack{grid-template-columns:1fr 1fr}
+  a{color:var(--text) !important}
+}
+</style>
+</head>
+<body id="top">
+
+<!-- ====================== TOP NAV / TABS ====================== -->
+<nav class="nav">
+  <a class="brand" href="#top"><span class="dot online"></span><span class="host" id="brand-host">evan@asdfji</span></a>
+  <div class="tabs" id="tabs">
+    <a href="#impact">Impact</a>
+    <a href="#projects">Projects</a>
+    <a href="#experience">Experience</a>
+    <a href="#stack">Stack</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <div class="nav-right">
+    <button class="theme-btn" id="theme-btn" aria-label="Toggle light / dark"></button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- ====================== HERO ====================== -->
+  <section class="hero">
+    <div class="hero-panel reveal">
+      <div class="hero-body">
+        <div class="avatar" id="avatar">
+          <!-- Drop a photo named profile.jpg next to this file. Until then, initials show. -->
+          <img id="avatar-img" src="profile.jpg" alt="Portrait"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+          <div class="fallback" id="avatar-fallback">EV</div>
+        </div>
+        <div class="identity">
+          <span class="pill"><span class="dot online"></span><span id="availability">open to work</span></span>
+          <div class="eyebrow" id="eyebrow"></div>
+          <h1 id="name"></h1>
+          <div class="title" id="title"></div>
+          <p class="tagline" id="tagline"></p>
+          <div class="meta-row" id="meta"></div>
+          <div class="links" id="links"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== IMPACT ====================== -->
+  <section id="impact">
+    <div class="section-head reveal"><h2><span class="pre">~/</span>impact</h2><span class="rule"></span><span class="count">key numbers</span></div>
+    <div class="tiles" id="metrics"></div>
+  </section>
+
+  <!-- ====================== PROJECTS ====================== -->
+  <section id="projects">
+    <div class="section-head reveal"><h2><span class="pre">~/</span>projects</h2><span class="rule"></span><span class="count" id="proj-count"></span></div>
+    <div class="projects" id="projects-grid"></div>
+  </section>
+
+  <!-- ====================== EXPERIENCE ====================== -->
+  <section id="experience">
+    <div class="section-head reveal"><h2><span class="pre">~/</span>experience</h2><span class="rule"></span><span class="count">service log</span></div>
+    <div class="timeline" id="timeline"></div>
+  </section>
+
+  <!-- ====================== STACK ====================== -->
+  <section id="stack">
+    <div class="section-head reveal"><h2><span class="pre">~/</span>stack</h2><span class="rule"></span><span class="count">capabilities</span></div>
+    <div class="stack" id="stack-grid"></div>
+  </section>
+
+  <!-- ====================== CONTACT / FOOTER ====================== -->
+  <footer id="contact">
+    <div class="prompt"><span class="accent" id="foot-host">evan@asdfji:~$</span> <span id="signoff"></span></div>
+    <div class="copy" id="copy"></div>
+  </footer>
+
+</div>
+
+<script>
+/* =========================================================================
+   ▼▼▼ EDIT EVERYTHING HERE — this object drives the whole page ▼▼▼
+   ========================================================================= */
+const CONFIG = {
+  handle:   "evan@asdfji",          // shows in the nav brand + footer prompt
+  name:     "Evan John",            // ← your full name
+  initials: "EJ",
+  photo:    false,                  // ← set true once you have a profile.jpg you like
+  eyebrow:  "// SYSTEMS ADMINISTRATOR",
+  title:    "I keep <b>~100 users</b> online.",
+  tagline:  "Solo IT admin running cloud, identity, and networks end to end — M365, Entra, Intune, firewalls, and whatever else is paging. On the side I build things, sometimes with AI.",
+  available:"Online",
+
+  meta: [
+    { icon:"pin",  text:"Central Islip, NY" },
+    { icon:"clock",text:"4+ yrs experience" },
+    { icon:"shield",text:"Tier 3 Support" },
+  ],
+
+  links: [
+    { label:"GitHub",   href:"#", icon:"github" },        // ← your GitHub URL
+    { label:"LinkedIn", href:"#", icon:"linkedin" },      // ← your LinkedIn URL
+    { label:"Email",    href:"mailto:evan@asdfji.com", icon:"mail" },  // ← your email
+  ],
+
+  metrics: [
+    { value:"2,500<span>+</span>", label:"Tickets closed",         note:"and counting" },
+    { value:"<span>−</span>33%",   label:"Ticket load reduced",    note:"-66 tickets / month" },
+    { value:"100<span>+</span>",   label:"KB articles authored",   note:"self-service first" },
+    { value:"700<span>+</span>",   label:"AD lists → M365 Groups", note:"migrated in < 1 month" },
+    { value:"200<span>+</span>",   label:"Users supported",        note:"across roles" },
+  ],
+
+  projects: [
+    { name:"Internal Knowledgebase", status:"wip", statusLabel:"wip",
+      desc:"A browser-based knowledgebase with AI-assisted search — built end to end. Ask a question and get an AI-generated response based on the database.",
+      tags:["JavaScript","Canvas","LLM API","No-backend"],
+      links:[ {label:"Live demo", href:"#"} ] },
+    { name:"YouTube Video Summarizer", status:"live", statusLabel:"live",
+      desc:"An AI summarizer of YouTube videos so you know if a video is worth your time before you watch it.",
+      tags:["Linux","XCP-ng","Nginx","Self-hosted"],
+      links:[ {label:"Source dode", href:"ytt.asdfji.com"} ] },
+    { name:"Image Compressor", status:"live", statusLabel:"live",
+      desc:"Lightweight web-app that runs on your phone or PC to compress images making them faster to share.",
+      tags:["Power Automate","M365","Exclaimer"],
+      links:[ {label:"Try now", href:"ic.asdfji.com"} ] },
+  ],
+
+  experience: [
+    { current:true, role:"Systems Administrator", org:"Current Employer", period:"2 yrs · Current",
+      bullets:[
+        "Sole IT admin for a business of ~100 users — closed 2,500+ tickets.",
+        "Cut monthly ticket load 33% (−66/mo) via knowledge base + automation.",
+        "Migrated 700+ AD distribution lists to M365 Groups in under a month.",
+        "Run M365, Azure / Entra ID, Intune, SonicWall, and W365 Cloud PCs.",
+      ] },
+    { role:"Managed IT Consultant", org:"Part-time", period:"2 yrs · Part-time",
+      bullets:[
+        "Managed IT infrastructure for multiple small-business clients.",
+        "Workstations, servers, networking, VoIP (3CX) and backups end to end.",
+      ] },
+    { role:"Assistant Commercial Manager", org:"AutoZone", period:"1 yr",
+      bullets:[ "Commercial operations and team support (pre-IT career)." ] },
+  ],
+
+  stack: [
+    { group:"Cloud & Identity",       items:["Microsoft 365","Azure","Entra ID","Intune","Active Directory","Windows 365 Cloud PCs"] },
+    { group:"Networking & VoIP",      items:["SonicWall","Routers / Modems","Switches","Patch Panels","Access Points","Wire Runs","3CX"] },
+    { group:"Automation & Tooling",   items:["Power Automate","Exclaimer","FreshService","Knowledge Base"] },
+    { group:"Endpoints & Hardware",   items:["Windows 10/11","Dell OptiPlex","Dell Latitude","PowerEdge","Thin Clients","Xerox MFPs"] },
+    { group:"Linux & Virtualization", items:["Arch","Debian","Ubuntu","CentOS","XCP-ng","Web / File / Media / Print servers"] },
+  ],
+
+  signoff:"thanks for reading — let's talk.",
+};
+/* ▲▲▲ END EDIT ZONE ▲▲▲ ----------------------------------------------------- */
+
+
+/* ---- icons ---- */
+const ICONS = {
+  github:'<svg viewBox="0 0 24 24"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>',
+  linkedin:'<svg viewBox="0 0 24 24"><path d="M20.4 20.4h-3.6v-5.6c0-1.3 0-3-1.9-3-1.9 0-2.1 1.4-2.1 2.9v5.7H9.3V9h3.4v1.6h.1c.5-.9 1.6-1.9 3.4-1.9 3.6 0 4.3 2.4 4.3 5.5v6.2zM5.3 7.4a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2zM7.1 20.4H3.5V9h3.6v11.4zM22.2 0H1.8C.8 0 0 .8 0 1.7v20.6c0 .9.8 1.7 1.8 1.7h20.4c1 0 1.8-.8 1.8-1.7V1.7C24 .8 23.2 0 22.2 0z"/></svg>',
+  mail:'<svg viewBox="0 0 24 24"><path d="M2 4h20a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm10 8.2L3.3 6.3v.1L12 12.5l8.7-6.1v-.1L12 12.2z"/></svg>',
+  print:'<svg viewBox="0 0 24 24"><path d="M6 9V3h12v6h2a2 2 0 0 1 2 2v6h-4v4H6v-4H2v-6a2 2 0 0 1 2-2h2zm2-4v4h8V5H8zm0 12v2h8v-4H8v2zm10-5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>',
+  sun:'<svg viewBox="0 0 24 24"><path d="M12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-13a1 1 0 0 1-1-1V1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1zm0 19a1 1 0 0 1-1-1v-2a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1zM4 13H2a1 1 0 1 1 0-2h2a1 1 0 1 1 0 2zm18 0h-2a1 1 0 1 1 0-2h2a1 1 0 1 1 0 2zM5.6 6.6a1 1 0 0 1-.7-.3L3.5 4.9a1 1 0 0 1 1.4-1.4l1.4 1.4a1 1 0 0 1-.7 1.7zm13.5 13.5a1 1 0 0 1-.7-.3l-1.4-1.4a1 1 0 1 1 1.4-1.4l1.4 1.4a1 1 0 0 1-.7 1.7zM4.2 20.1a1 1 0 0 1-.7-1.7l1.4-1.4a1 1 0 1 1 1.4 1.4l-1.4 1.4a1 1 0 0 1-.7.3zM17.7 6.6a1 1 0 0 1-.7-1.7l1.4-1.4a1 1 0 1 1 1.4 1.4l-1.4 1.4a1 1 0 0 1-.7.3z"/></svg>',
+  moon:'<svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
+};
+const METAICONS = {
+  pin:'<svg viewBox="0 0 24 24"><path d="M12 21s-7-6-7-11a7 7 0 1 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  box:'<svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>',
+  shield:'<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V5l8-3z"/><path d="M9 12l2 2 4-4"/></svg>',
+};
+
+const $ = id => document.getElementById(id);
+const C = CONFIG;
+
+/* ---- render ---- */
+$("brand-host").textContent = C.handle;
+$("foot-host").textContent = C.handle + ":~$";
+$("eyebrow").textContent = C.eyebrow;
+$("name").textContent = C.name;
+$("title").innerHTML = C.title;
+$("tagline").textContent = C.tagline;
+$("availability").textContent = C.available;
+$("avatar-fallback").textContent = C.initials;
+if(!C.photo){ const a = $("avatar"); if(a){ a.remove(); document.querySelector(".hero-body").classList.add("no-photo"); } }
+$("signoff").textContent = C.signoff;
+$("copy").textContent = "© " + new Date().getFullYear() + " " + C.name + " · single static file, no frameworks.";
+
+$("meta").innerHTML = C.meta.map(m=>`<span class="item">${METAICONS[m.icon]||""}${m.text}</span>`).join("");
+
+$("links").innerHTML =
+  C.links.map(l=>`<a href="${l.href}"${l.href.startsWith("http")?' target="_blank" rel="noopener"':''}>${ICONS[l.icon]||""}${l.label}</a>`).join("")
+  + `<button id="print-link" onclick="window.print()">${ICONS.print}Print / PDF</button>`;
+
+$("metrics").innerHTML = C.metrics.map(m=>`
+  <article class="tile reveal">
+    <div class="tile-val">${m.value}</div>
+    <div class="tile-label">${m.label}</div>
+    ${m.note?`<div class="tile-note">${m.note}</div>`:""}
+  </article>`).join("");
+
+$("proj-count").textContent = C.projects.length + " shown";
+$("projects-grid").innerHTML = C.projects.map(p=>`
+  <article class="card reveal">
+    <div class="card-top"><h3>${p.name}</h3><span class="status ${p.status}"><span class="dot"></span>${p.statusLabel}</span></div>
+    <p>${p.desc}</p>
+    <div class="tags">${p.tags.map(t=>`<span>${t}</span>`).join("")}</div>
+    <div class="card-links">${p.links.map(l=>`<a href="${l.href}"${l.href.startsWith("http")?' target="_blank" rel="noopener"':''}>${l.label} ↗</a>`).join("")}</div>
+  </article>`).join("")
+  + `<article class="card add reveal"><div><div class="plus">+</div>add your next project<br>in the CONFIG block</div></article>`;
+
+$("timeline").innerHTML = C.experience.map(e=>`
+  <div class="entry ${e.current?'current':''} reveal">
+    <div class="role">${e.role}</div><div class="org">${e.org}</div>
+    <div class="period">${e.period}</div>
+    <ul>${e.bullets.map(b=>`<li>${b}</li>`).join("")}</ul>
+  </div>`).join("");
+
+$("stack-grid").innerHTML = C.stack.map(g=>`
+  <div class="group reveal"><h4>${g.group}</h4>
+    <div class="chips">${g.items.map(i=>`<span>${i}</span>`).join("")}</div>
+  </div>`).join("");
+
+/* ---- theme (default light, toggle to dark, remembered) ---- */
+const root = document.documentElement;
+function applyTheme(t){
+  root.dataset.theme = t;
+  $("theme-btn").innerHTML = (t === "dark") ? ICONS.sun : ICONS.moon;
+  try{ localStorage.setItem("evan-theme", t); }catch(e){}
+}
+(function initTheme(){
+  let t; try{ t = localStorage.getItem("evan-theme"); }catch(e){}
+  applyTheme(t || "light");
+})();
+$("theme-btn").addEventListener("click", ()=> applyTheme(root.dataset.theme === "dark" ? "light" : "dark"));
+
+/* ---- scroll-spy: highlight the active tab ---- */
+const tabLinks = Array.from(document.querySelectorAll(".tabs a"));
+const spy = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const id = "#" + e.target.id;
+      tabLinks.forEach(a=> a.classList.toggle("active", a.getAttribute("href") === id));
+    }
+  });
+}, {rootMargin:"-45% 0px -50% 0px", threshold:0});
+["impact","projects","experience","stack","contact"].forEach(id=>{ const el=$(id); if(el) spy.observe(el); });
+
+/* ---- reveal on scroll ---- */
+const io = new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target);} }); }, {threshold:.12});
+document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
