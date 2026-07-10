@@ -340,7 +340,8 @@ footer .copy{font-family:var(--mono); font-size:.72rem; color:var(--faint); marg
    ▼▼▼ EDIT EVERYTHING HERE — this object drives the whole page ▼▼▼
    ========================================================================= */
 const CONFIG = {
-  handle:   "evan@asdfji",          // shows in the nav brand + footer prompt
+  handle:   "evan@asdfji",          // shows in the footer prompt
+  brandLabel: "Resume / CV",        // shows in the nav brand (top left)
   name:     "Evan John",            // ← your full name
   initials: "EJ",
   photo:    false,                  // ← set true once you have a profile.jpg you like
@@ -358,7 +359,7 @@ const CONFIG = {
   links: [
     { label:"GitHub",   href:"https://github.com/wildurbear", icon:"github" },
     { label:"LinkedIn", href:"https://www.linkedin.com/in/evanjohn29/", icon:"linkedin" },
-    { label:"Email",    href:"mailto:evan@asdfji.com", icon:"mail" },  // ← your email
+    { label:"Email",    href:"mailto:rivee03@gmail.com", icon:"mail" },
   ],
 
   metrics: [
@@ -373,15 +374,15 @@ const CONFIG = {
     { name:"Internal Knowledgebase", status:"wip", statusLabel:"wip",
       desc:"A browser-based knowledgebase with AI-assisted search — built end to end. Ask a question and get an AI-generated response based on the database.",
       tags:["JavaScript","Canvas","LLM API","No-backend"],
-      links:[ {label:"Live demo", href:"#"} ] },
+      links:[] },
     { name:"YouTube Video Summarizer", status:"live", statusLabel:"live",
       desc:"An AI summarizer of YouTube videos so you know if a video is worth your time before you watch it.",
       tags:["Linux","XCP-ng","Nginx","Self-hosted"],
-      links:[ {label:"Source dode", href:"ytt.asdfji.com"} ] },
+      links:[] },
     { name:"Image Compressor", status:"live", statusLabel:"live",
       desc:"Lightweight web-app that runs on your phone or PC to compress images making them faster to share.",
       tags:["Power Automate","M365","Exclaimer"],
-      links:[ {label:"Try now", href:"ic.asdfji.com"} ] },
+      links:[ {label:"Try now", href:"https://ic.asdfji.com"} ] },
   ],
 
   experience: [
@@ -434,7 +435,7 @@ const $ = id => document.getElementById(id);
 const C = CONFIG;
 
 /* ---- render ---- */
-$("brand-host").textContent = C.handle;
+$("brand-host").textContent = C.brandLabel;
 $("foot-host").textContent = C.handle + ":~$";
 $("eyebrow").textContent = C.eyebrow;
 $("name").textContent = C.name;
@@ -466,8 +467,8 @@ $("projects-grid").innerHTML = C.projects.map(p=>`
     <p>${p.desc}</p>
     <div class="tags">${p.tags.map(t=>`<span>${t}</span>`).join("")}</div>
     <div class="card-links">${p.links.map(l=>`<a href="${l.href}"${l.href.startsWith("http")?' target="_blank" rel="noopener"':''}>${l.label} ↗</a>`).join("")}</div>
-  </article>`).join("")
-  + `<article class="card add reveal"><div><div class="plus">+</div>add your next project<br>in the CONFIG block</div></article>`;
+  </article>`).join("");
+  // + `<article class="card add reveal"><div><div class="plus">+</div>add your next project<br>in the CONFIG block</div></article>`;
 
 $("timeline").innerHTML = C.experience.map(e=>`
   <div class="entry ${e.current?'current':''} reveal">
