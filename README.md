@@ -88,29 +88,6 @@ Pre-IT career. Commercial operations and team support.
 
 ---
 
-## ~/market_context
-
-*For transparency — what this skill set is worth in the current market, based on published data rather than wishful thinking.*
-
-The role I actually perform maps closest to **Systems Engineer / Cloud & M365 Administrator**, not entry-level "SysAdmin I." Benchmarks:
-
-- **U.S. national median** (BLS, Network & Computer Systems Administrators, May 2024): **$96,800**, with the top 10% above $150K
-- **Suffolk County, NY** (Salary.com, SysAdmin I baseline): **~$80K** — a level-I figure that assumes an escalation path above the role; solo end-to-end ownership benchmarks higher
-- **Long Island / NYC-adjacent** (Glassdoor, SysAdmin II): **~$90K base / ~$101K total comp**
-- **New York, NY** (Salary.com / Robert Half, Systems Administrator): **$108K–$161K** range, ~$128K average
-
-Realistic bands for this profile:
-
-| Market | Fair range |
-|---|---|
-| Suffolk County (SMB, solo-admin seat) | $85–95K |
-| Long Island overall | $90–115K |
-| NYC-commutable / engineer-titled | $110–130K+ |
-
-The honest caveat cuts both ways: a ~100-user environment caps what any single seat pays, regardless of capability — but running that environment *alone*, cloud-first, with automation that measurably cut ticket load by a third, is not level-I work and shouldn't be priced like it.
-
----
-
 ## ~/contact
 
 - **Website:** [cv.asdfji.com](https://cv.asdfji.com)
